@@ -1,0 +1,32 @@
+# =====================================================================
+# Ticker universe + context assets.
+# MVP: single-ticker (NVDA). Do not enable multi-ticker until the
+# single-ticker pipeline works end-to-end (spec §6).
+# =====================================================================
+
+default_ticker: NVDA
+
+tickers:
+  NVDA:
+    name: "NVIDIA Corporation"
+    sector_etfs: ["SMH", "SOXX"]
+    market_etfs: ["SPY", "QQQ"]
+    peers: ["AMD", "AVGO", "TSM", "MSFT", "META"]
+    vol_proxy: "^VIX"
+    earnings_sensitive: true
+
+  TSLA:
+    name: "Tesla, Inc."
+    sector_etfs: ["XLY"]
+    market_etfs: ["SPY", "QQQ"]
+    peers: ["GM", "F", "RIVN", "LCID"]
+    vol_proxy: "^VIX"
+    earnings_sensitive: true
+
+  AMD:
+    name: "Advanced Micro Devices"
+    sector_etfs: ["SMH", "SOXX"]
+    market_etfs: ["SPY", "QQQ"]
+    peers: ["NVDA", "AVGO", "TSM", "INTC"]
+    vol_proxy: "^VIX"
+    earnings_sensitive: true

@@ -1,0 +1,46 @@
+# =====================================================================
+# Event playbook (spec answer §news-overlay).
+# Maps structured news event_types -> prior directional bias + base impact.
+# Used by the live news overlay to translate classified events into a
+# company/macro news-risk score. Direction is from the SHORT perspective:
+#   bias > 0  => raises downside (bearish) risk
+#   bias < 0  => lowers downside (bullish) risk
+# impact_weight scales how strongly the event moves risk before confirmation.
+# =====================================================================
+
+events:
+  # --- Company-specific, bearish ---
+  guidance_cut:            { bias:  1.0, impact_weight: 1.0, scope: company }
+  earnings_miss:           { bias:  0.9, impact_weight: 0.95, scope: company }
+  analyst_downgrade:       { bias:  0.6, impact_weight: 0.7,  scope: company }
+  lawsuit:                 { bias:  0.5, impact_weight: 0.6,  scope: company }
+  regulatory_action:       { bias:  0.6, impact_weight: 0.7,  scope: company }
+  executive_departure:     { bias:  0.5, impact_weight: 0.55, scope: company }
+  product_delay:           { bias:  0.5, impact_weight: 0.6,  scope: company }
+  supply_chain_risk:       { bias:  0.5, impact_weight: 0.6,  scope: company }
+  demand_weakness:         { bias:  0.6, impact_weight: 0.7,  scope: company }
+  abnormal_news_volume:    { bias:  0.3, impact_weight: 0.4,  scope: company }
+
+  # --- Company-specific, bullish ---
+  guidance_raise:          { bias: -0.9, impact_weight: 0.9,  scope: company }
+  earnings_beat:           { bias: -0.8, impact_weight: 0.85, scope: company }
+  analyst_upgrade:         { bias: -0.5, impact_weight: 0.6,  scope: company }
+  product_launch:          { bias: -0.4, impact_weight: 0.5,  scope: company }
+  partnership:             { bias: -0.3, impact_weight: 0.4,  scope: company }
+  ma_rumor:                { bias: -0.3, impact_weight: 0.5,  scope: company }
+
+  # --- Macro / market-wide, bearish ---
+  hawkish_fed:             { bias:  0.7, impact_weight: 0.8,  scope: macro }
+  rate_shock:              { bias:  0.7, impact_weight: 0.8,  scope: macro }
+  inflation_surprise:      { bias:  0.6, impact_weight: 0.7,  scope: macro }
+  recession_risk:          { bias:  0.6, impact_weight: 0.7,  scope: macro }
+  geopolitical_risk:       { bias:  0.5, impact_weight: 0.6,  scope: macro }
+  liquidity_credit_stress: { bias:  0.7, impact_weight: 0.8,  scope: macro }
+  sector_selloff:          { bias:  0.6, impact_weight: 0.7,  scope: sector }
+
+  # --- Macro, risk-on ---
+  dovish_fed:              { bias: -0.6, impact_weight: 0.7,  scope: macro }
+  risk_on_rally:           { bias: -0.4, impact_weight: 0.5,  scope: macro }
+
+  # --- Fallback ---
+  unknown:                 { bias:  0.0, impact_weight: 0.2,  scope: unknown }

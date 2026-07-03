@@ -1,0 +1,63 @@
+# =====================================================================
+# DownsideIQ global settings
+# =====================================================================
+
+default_ticker: NVDA
+default_prediction_horizon: "24h"     # 12h | 24h  (MVP target is next-session daily)
+
+# Bar granularity. MVP trains on daily; architecture is intraday-ready.
+bar_size: "1d"                        # 1d (MVP) | 1h | 15m (later, needs intraday provider)
+
+# Target definition (leakage-safe). Next-session log return for the daily MVP.
+target:
+  type: "next_session_log_return"     # forward log(close_{t+1}/close_t)
+  # Volatility-adjusted downside label threshold (spec §10.1):
+  # downside_label = 1 if future_return < -max(floor_pct, vol_mult * recent_vol)
+  downside_floor_pct: 0.0075          # 0.75%
+  downside_vol_mult: 0.5
+  recent_vol_window: 20               # bars for recent volatility estimate
+
+database_url: "sqlite:///downsideiq.db"
+
+# --- Data providers ---
+use_yfinance: true
+use_tavily: true
+use_gemini: true                      # structured news scoring (falls back to heuristic)
+use_alpha_vantage: true
+use_finnhub: true
+use_fundamentals: true
+
+# News scorer provider preference: gemini | heuristic
+news_scorer: "gemini"
+# Max items per run sent to the LLM scorer (cost control); rest use heuristic.
+news_scorer_max_llm_items: 20
+
+# --- Historical data window for training ---
+history_lookback_days: 1500           # ~6y of daily bars for training/backtest
+
+# --- Decision-time live overlay (news event-risk adjustment, spec answer) ---
+# Caps how much live news can move base model log-odds. News cannot fully
+# override the base model unless credibility + relevance + price/volume
+# confirmation are all strong.
+news_overlay:
+  enabled: true
+  alpha_company_news: 0.8
+  alpha_macro_news: 0.5
+  alpha_event_impact: 0.7
+  alpha_price_volume_confirmation: 0.6
+  alpha_uncertainty_penalty: 0.9
+  max_logodds_shift: 1.2              # hard cap on |news adjustment| to base log-odds
+
+# --- Transaction cost / slippage assumptions (used by gate + backtest) ---
+costs:
+  commission_bps: 1.0                 # per side, basis points
+  slippage_bps: 5.0                   # per side, basis points
+  min_edge_bps: 20.0                  # expected downside must exceed round-trip cost + buffer
+
+# --- Dashboard ---
+dashboard_port: 8501
+timezone: "America/New_York"
+
+# --- Logging ---
+log_level: "INFO"
+log_dir: "logs"

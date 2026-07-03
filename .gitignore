@@ -1,0 +1,45 @@
+# --- Secrets ---
+.env
+*.key
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.venv_full/
+venv/
+.env.local
+
+# --- Data & artifacts (keep folder structure via .gitkeep, ignore contents) ---
+data/raw/**
+data/processed/**
+data/reports/**
+!data/**/.gitkeep
+models_store/*
+!models_store/.gitkeep
+logs/*
+!logs/.gitkeep
+
+# Prediction ledger / paper trades: keep these tracked? No — they are runtime state.
+data/predictions/*.csv
+data/predictions/*.parquet
+
+# --- Databases ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- OS / IDE ---
+.DS_Store
+.vscode/
+.idea/
+
+# --- Test / cache ---
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/

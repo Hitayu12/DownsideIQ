@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DownsideIQ — Equity Downside-Risk Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">◊</div>
+      <div>
+        <h1>DownsideIQ</h1>
+        <div class="sub">Risk &amp; Signal Engine</div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="modeswitch" id="modeswitch">
+      <button data-mode="strict" class="active">Strict</button>
+      <button data-mode="research">Research</button>
+    </div>
+    <div class="statuspill"><span class="dot" id="api-dot"></span><span id="api-status">connecting…</span></div>
+    <div class="disclaimer">Paper only · live trading disabled</div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="nav-item active" data-view="overview"><span class="ic">▣</span> Overview</div>
+      <div class="nav-item" data-view="signal"><span class="ic">◎</span> Live Signal</div>
+      <div class="nav-item" data-view="history"><span class="ic">≣</span> Signal History</div>
+      <div class="nav-item" data-view="paper"><span class="ic">▤</span> Paper Trading</div>
+      <div class="nav-item" data-view="risk"><span class="ic">⛉</span> Risk Monitor</div>
+      <div class="nav-item" data-view="health"><span class="ic">♥</span> System Health</div>
+      <div class="group">Reference</div>
+      <a class="ext" href="/docs" target="_blank"><div class="nav-item"><span class="ic">⌁</span> API Docs</div></a>
+    </nav>
+
+    <main class="main">
+      <!-- OVERVIEW -->
+      <section class="view active" id="view-overview">
+        <h2 class="title">Platform Overview</h2>
+        <p class="subtitle">Live short-horizon (12–24h) equity downside-risk engine — prediction is not the edge, risk-controlled decision-making is.</p>
+        <div class="grid cols-4" id="ov-stats"></div>
+        <div class="grid cols-2" style="margin-top:16px;">
+          <div class="card">
+            <h3>How it works</h3>
+            <p style="font-size:13.5px;color:var(--muted);line-height:1.7">
+              A <b style="color:var(--text)">Data Intelligence Council</b> gathers price, volatility, market context, timestamp-safe fundamentals and live news. A <b style="color:var(--text)">Prediction &amp; Risk Council</b> runs an XGBoost downside classifier, a GARCH volatility model, and a quantile tail model. A capped <b style="color:var(--text)">log-odds news overlay</b> adjusts the base probability, then a mode-aware <b style="color:var(--text)">risk engine</b> applies gates, limits and a kill switch to emit <span class="pill SHORT">SHORT</span> <span class="pill WATCH">WATCH</span> or <span class="pill NOTRADE">NO&nbsp;TRADE</span> — every signal logged, explained and reconciled.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Registered models</h3>
+            <div id="ov-models"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LIVE SIGNAL -->
+      <section class="view" id="view-signal">
+        <h2 class="title">Live Signal</h2>
+        <p class="subtitle">Run the full council pipeline for a ticker. Mode: <b id="signal-mode">strict</b>.</p>
+        <div class="controls">
+          <input class="ticker" id="ticker" value="NVDA" maxlength="6" />
+          <button class="btn" id="analyze-btn">Analyze</button>
+          <span id="analyze-status" style="color:var(--muted);font-size:13px"></span>
+        </div>
+        <div id="signal-result"><div class="empty">Enter a ticker and click <b>Analyze</b> to run the pipeline.</div></div>
+      </section>
+
+      <!-- HISTORY -->
+      <section class="view" id="view-history">
+        <h2 class="title">Signal History</h2>
+        <p class="subtitle">Strict-mode audit ledger — every prediction logged before its outcome.</p>
+        <div class="grid cols-4" id="hist-stats"></div>
+        <div class="card" style="margin-top:16px"><h3>Predicted probability vs realised return</h3><div id="hist-chart" class="chart"></div></div>
+        <div class="card" style="margin-top:16px"><h3>Recent signals</h3><div id="hist-table"></div></div>
+      </section>
+
+      <!-- PAPER -->
+      <section class="view" id="view-paper">
+        <h2 class="title">Paper Trading</h2>
+        <p class="subtitle"><span class="pill WATCH">EXPLORATORY</span> research-mode trades — mechanics demonstration, not the strict live gate. Hypothetical, no real money.</p>
+        <div class="grid cols-4" id="paper-stats"></div>
+        <div class="card" style="margin-top:16px"><h3>Cumulative P&amp;L (equity curve)</h3><div id="paper-chart" class="chart"></div></div>
+        <div class="card" style="margin-top:16px"><h3>Trades</h3><div id="paper-table"></div></div>
+      </section>
+
+      <!-- RISK -->
+      <section class="view" id="view-risk">
+        <h2 class="title">Risk Monitor</h2>
+        <p class="subtitle">Kill switch, exposure limits, model drift &amp; data quality.</p>
+        <div id="risk-killswitch"></div>
+        <div class="grid cols-4" id="risk-stats" style="margin-top:16px"></div>
+        <div class="grid cols-2" style="margin-top:16px">
+          <div class="card"><h3>Data-quality distribution</h3><div id="risk-dq"></div></div>
+          <div class="card"><h3>Risk limits</h3><div id="risk-limits"></div></div>
+        </div>
+      </section>
+
+      <!-- HEALTH -->
+      <section class="view" id="view-health">
+        <h2 class="title">System Health</h2>
+        <p class="subtitle">Backend, database, data providers and model registry.</p>
+        <div class="grid cols-4" id="health-stats"></div>
+        <div class="grid cols-2" style="margin-top:16px">
+          <div class="card"><h3>Data providers</h3><div id="health-providers"></div></div>
+          <div class="card"><h3>Model performance</h3><div id="health-models"></div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

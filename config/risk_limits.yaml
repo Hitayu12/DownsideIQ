@@ -1,0 +1,36 @@
+# =====================================================================
+# Risk limits + signal-quality gate thresholds (spec §13, §14).
+# These are enforced by the Trading Readiness Layer. Conservative by design.
+# =====================================================================
+
+# --- Position sizing / account ---
+account_size: 10000.0
+max_risk_per_trade: 0.005          # 0.5% of account
+max_daily_loss: 0.02               # 2%
+max_weekly_drawdown: 0.05          # 5%
+max_open_positions: 3
+max_consecutive_losses: 2
+cooldown_after_consecutive_losses: true
+
+# --- Signal quality gate (a signal must clear ALL of these to be tradable) ---
+minimum_downside_probability: 0.65
+minimum_model_agreement: 0.70
+minimum_data_confidence: 0.75
+require_price_volume_confirmation: true   # news-only signals -> WATCH, never SHORT
+
+# --- Earnings handling ---
+block_trade_near_earnings: true
+earnings_blackout_days: 1          # no SHORT within N days of earnings unless event-risk mode
+
+# --- Stop / take-profit defaults ---
+stop_loss_floor_pct: 0.01          # 1.0%
+stop_loss_vol_mult: 1.5            # stop = max(floor, vol_mult * predicted_vol)
+take_profit_rr: 1.5                # reward:risk target
+
+# --- Kill switch / pipeline safety ---
+no_trade_on_pipeline_failure: true
+no_trade_on_model_drift: true
+
+# --- Trading mode (NEVER enable live trading by default) ---
+paper_trading_mode: true
+live_trading_enabled: false

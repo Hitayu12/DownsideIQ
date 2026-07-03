@@ -1,0 +1,75 @@
+# DownsideIQ deployment: api + worker + redis + dashboard.
+# Postgres is opt-in via the `postgres` profile (prod). Default uses a shared
+# SQLite volume for a single-node MVP.
+#
+#   docker compose -f deploy/docker-compose.yml up --build
+#   docker compose -f deploy/docker-compose.yml --profile postgres up --build
+#
+# Live trading is disabled by design; do not change LIVE_TRADING_ENABLED.
+
+x-app: &app
+  build:
+    context: ..
+    dockerfile: deploy/Dockerfile
+  env_file: ../.env
+  environment:
+    - REDIS_URL=redis://redis:6379/0
+    - DATABASE_URL=${DATABASE_URL:-sqlite:////app/data/downsideiq.db}
+    - LIVE_TRADING_ENABLED=false
+  volumes:
+    - app-data:/app/data
+    - app-models:/app/models_store
+    - app-logs:/app/logs
+  depends_on:
+    redis:
+      condition: service_healthy
+
+services:
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    <<: *app
+    command: uvicorn src.api.app:app --host 0.0.0.0 --port 8000
+    ports: ["8000:8000"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    <<: *app
+    command: celery -A src.tasks.celery_app worker --loglevel=info
+
+  dashboard:
+    <<: *app
+    command: streamlit run src/dashboard/app.py --server.port 8501 --server.address 0.0.0.0
+    environment:
+      - API_BASE=http://api:8000
+      - REDIS_URL=redis://redis:6379/0
+    ports: ["8501:8501"]
+    depends_on:
+      - api
+
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["postgres"]
+    environment:
+      - POSTGRES_USER=downsideiq
+      - POSTGRES_PASSWORD=downsideiq
+      - POSTGRES_DB=downsideiq
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    ports: ["5432:5432"]
+
+volumes:
+  app-data:
+  app-models:
+  app-logs:
+  pg-data:

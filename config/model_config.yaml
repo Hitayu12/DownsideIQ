@@ -1,0 +1,55 @@
+# =====================================================================
+# Model configuration + registry metadata (spec §11 model versioning).
+# All model hyperparameters and ensemble weights live here — never hardcoded.
+# =====================================================================
+
+feature_set_version: "fs-1.0.0"
+
+ensemble:
+  # Base downside-risk weights (spec §11.1). Learnable later via walk-forward.
+  weight_classifier: 0.45
+  weight_garch: 0.30
+  weight_quantile: 0.25
+
+downside_classifier:
+  name: "downside_xgb"
+  version: "1.0.0"
+  algorithm: "xgboost"
+  params:
+    n_estimators: 300
+    max_depth: 4
+    learning_rate: 0.03
+    subsample: 0.8
+    colsample_bytree: 0.8
+    min_child_weight: 5
+    reg_lambda: 1.0
+    objective: "binary:logistic"
+    eval_metric: "logloss"
+    tree_method: "hist"
+
+volatility_model:
+  name: "vol_garch"
+  version: "1.0.0"
+  vol: "Garch"          # Garch | EGarch | GJR
+  p: 1
+  q: 1
+  dist: "t"             # Student-t fat tails
+  return_scale: 100.0
+
+quantile_model:
+  name: "quantile_hgb"
+  version: "1.0.0"
+  quantiles: [0.05, 0.10]
+  params:
+    max_iter: 300
+    learning_rate: 0.03
+    max_depth: 3
+    l2_regularization: 1.0
+
+walk_forward:
+  n_splits: 5
+  min_train: 252
+  train_frac: 0.6        # OOS holdout for paper backtest
+
+registry:
+  artifacts_dir: "models_store"

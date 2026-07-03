@@ -1,0 +1,43 @@
+# =====================================================================
+# Data-source / provider configuration (spec §6 error handling, §7 env).
+# Provider choices, timeouts, retries, and enable flags — all configurable.
+# Secrets come from .env, NEVER here.
+# =====================================================================
+
+price:
+  primary: "yfinance"        # keyless; REQUIRED for signals (failure blocks signal)
+  bar_size: "1d"             # 1d (MVP) | 1h | 15m
+  history_lookback_days: 1500
+  timeout_seconds: 30
+  retries: 2
+  retry_backoff_seconds: 2
+  # Staleness guard: last bar must be within this many calendar days.
+  max_staleness_days: 5
+
+news:
+  provider: "tavily"         # failure -> price-only mode, news_confidence = 0
+  enabled: true
+  max_results_per_query: 4
+  lookback_days: 3
+  timeout_seconds: 20
+  retries: 2
+  retry_backoff_seconds: 2
+
+news_scoring:
+  provider: "gemini"         # gemini -> heuristic fallback on failure
+  model: "gemini-2.5-flash"
+  max_llm_items: 20          # cost cap; remainder scored heuristically
+  timeout_seconds: 25
+  retries: 1
+  circuit_breaker: true      # disable LLM for the run after a quota/permission error
+
+fundamentals:
+  providers: ["alpha_vantage", "finnhub"]  # failure -> skip fundamentals gracefully
+  enabled: true
+  timeout_seconds: 20
+  retries: 2
+  retry_backoff_seconds: 3
+
+market_context:
+  enabled: true
+  timeout_seconds: 30

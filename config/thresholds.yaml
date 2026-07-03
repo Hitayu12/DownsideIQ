@@ -1,0 +1,33 @@
+# =====================================================================
+# Threshold design (spec §13) — TWO clearly-separated modes.
+# strict   = Capital/live discipline: conservative FIXED thresholds.
+# research = Exploratory only: PERCENTILE-calibrated thresholds.
+# Official signal performance must only ever use `strict`. Research results
+# are tagged separately in the DB (`mode` column) and dashboard.
+# =====================================================================
+
+default_mode: "strict"
+
+modes:
+  strict:
+    type: "fixed"
+    minimum_downside_probability: 0.65
+    minimum_model_agreement: 0.70
+    minimum_data_confidence: 0.75
+    require_price_volume_confirmation: true
+    pv_confirm_threshold: 0.10
+    min_edge_bps: 20
+    watch_probability_margin: 0.10   # within this of the SHORT bar -> WATCH band
+
+  research:
+    type: "percentile"
+    # SHORT if adjusted risk is in the top (1 - short_percentile) of a trailing
+    # window; WATCH for the next band. Keeps discipline relative to the model's
+    # own distribution while producing enough signals to study.
+    short_percentile: 0.85
+    watch_percentile: 0.60
+    trailing_window: 120
+    minimum_data_confidence: 0.55
+    require_price_volume_confirmation: true
+    pv_confirm_threshold: 0.0
+    min_edge_bps: 10
